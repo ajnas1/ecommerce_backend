@@ -1,9 +1,10 @@
 import { query } from "express";
 import db from "../../db.js";
 import queries from "./queries.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const addUser = (req, res, next) => {
+const addUser = (req, res) => {
     const {username, password} = req.body;
     db.query(queries.getUser, [username], (error, result) => {
         if(result && result.length) {
@@ -27,4 +28,33 @@ const addUser = (req, res, next) => {
     })
 }
 
-export default { addUser }
+
+const checkUser = (req,res) => {
+    const {username, password} = req.body;
+    db.query(queries.checkUser, [username], (error, result) => {
+        console.log(result.rows)
+        if(error) {
+            return res.status(400).send({message: err})
+        }
+        if(!result.rows || !result.rows.length) {
+            console.log('err');
+            console.log('err');
+            return res.status(400).send({message: 'Username or password incorrect'})
+        }
+
+        bcrypt.compare(password, result.rows[0].password, (bError,bResult) => {
+            if(bError) {
+                return res.status(400).send({message: 'Username or password incorrect'})
+            }
+
+            if(bResult) {
+                const token = jwt.sign({username: result.rows[0].username,userId: result.rows[0].id}, 'SECRETKEY',{expiresIn: '7d'});
+                db.query(queries.updateLastLogin, [result.rows[0].id]);
+                return res.status(200).send({message: 'Logged in!', token, user: result.rows[0]})
+            }
+            return res.status(400).send({message: 'Username and password incorrect!'})
+        })
+    })
+}
+
+export default { addUser , checkUser}
