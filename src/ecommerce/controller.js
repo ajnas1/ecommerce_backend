@@ -57,4 +57,15 @@ const checkUser = (req,res) => {
     })
 }
 
-export default { addUser , checkUser}
+const addProduct = (req, res) => {
+   const {name, image, price , isStockOut}= req.body;
+   db.query(queries.addProduct, [name, image, price, isStockOut], (error, result) => {
+    console.log('asdnkdsaj');
+    if(error) {
+        res.status(400).send({message: "productadding unsuccessfull"});
+    }
+    res.status(201).send({message: "product added"});
+   })
+}
+
+export default { addUser , checkUser ,addProduct}

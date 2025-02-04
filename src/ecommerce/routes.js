@@ -13,4 +13,6 @@ router.get('/secret-route', (req, res,next) => {
     res.send('This is the secret content. Only logged in users can see that!');
 });
 
+router.post('/products', controller.addProduct);
+
 export default router;
