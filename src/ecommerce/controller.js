@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const addUser = (req, res) => {
-    const {username, password} = req.body;
+    const {username, password, email} = req.body;
     db.query(queries.getUser, [username], (error, result) => {
         if(result && result.length) {
             //error
@@ -16,7 +16,7 @@ const addUser = (req, res) => {
                 if(err) {
                     return res.status(500).send({message: err})
                 }else {
-                    db.query(queries.addUser, [username, hash], (error, result) => {
+                    db.query(queries.addUser, [username, hash, email], (error, result) => {
                         if(err) {
                             return res.status(400).send({message: err})
                         }
@@ -68,4 +68,12 @@ const addProduct = (req, res) => {
    })
 }
 
-export default { addUser , checkUser ,addProduct}
+const getProducts = (req, res) => {
+    db.query(queries.getProducts, (error, result) => {
+        if(error) res.status(400).send({message: "unsuccessfull"});
+
+        res.status(200).json(result.rows);
+    })
+}
+
+export default { addUser , checkUser ,addProduct, getProducts}
