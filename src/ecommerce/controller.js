@@ -2,7 +2,7 @@ import { query } from "express";
 import db from "../../db.js";
 import queries from "./queries.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const addUser = (req, res) => {
     const {username, password, email} = req.body;
