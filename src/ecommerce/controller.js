@@ -68,4 +68,12 @@ const addProduct = (req, res) => {
    })
 }
 
-export default { addUser , checkUser ,addProduct}
+const getProducts = (req, res) => {
+    db.query(queries.getProducts, (error, result) => {
+        if(error) res.status(400).send({message: "unsuccessfull"});
+
+        res.status(200).json(result.rows);
+    })
+}
+
+export default { addUser , checkUser ,addProduct, getProducts}
