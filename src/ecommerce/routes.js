@@ -17,4 +17,6 @@ router.post('/add-product', controller.addProduct);
 
 router.get('/get-products', controller.getProducts);
 
+router.get('/generate-otp', controller.generateOTP);
+
 export default router;

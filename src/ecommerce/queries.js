@@ -4,5 +4,7 @@ const checkUser = "SELECT * FROM users WHERE username = $1";
 const updateLastLogin = "UPDATE users SET last_login = now() Where id = $1";
 const addProduct = "INSERT INTO products (name, image, price, isStockOut) VALUES ($1, $2, $3, $4)";
 const getProducts = "SELECT * FROM products";
+const addOTP = "INSERT INTO otp (email, otp, createdat) VAlUES($1, $2, NOW())";
+// const checkEmailExists = "SELECT * FROM  users WHERE email = $1";
 
-export default { getUser, addUser, checkUser, updateLastLogin, addProduct, getProducts }
+export default { getUser, addUser, checkUser, updateLastLogin, addProduct, getProducts,  addOTP}
