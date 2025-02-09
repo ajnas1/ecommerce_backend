@@ -84,12 +84,6 @@ const generateOTP = async (req, res) => {
     db.query(queries.checkEmailExists, [email], (error, result) => {
         if (error) throw error;
         if (result.rows.length) {
-            console.log('Email already exists.');
-            res.status(400).json({
-                isSuccess: false,
-                messsage: "Email already exists.",
-            });
-        } else {
             const otp = otpGenerator.generate(4, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
 
             try {
@@ -120,8 +114,52 @@ const generateOTP = async (req, res) => {
                     messsage: "Error sending OTP",
                 });
             }
+
+        } else {
+            console.log('Email not exists.');
+            res.status(400).json({
+                isSuccess: false,
+                messsage: "Email not exists.",
+            });
         }
-    })
+    });
 }
 
-export default { addUser, checkUser, addProduct, getProducts, generateOTP }
+const verifyOTP = (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        db.query(queries.checkOTPExists, [email, otp], (error, result) => {
+            if (result.rows.length) {
+                res.status(200).json({
+                    isSuccess: true,
+                    message: "success"
+                })
+            } else {
+                res.status(400).json({
+                    isSuccess: false,
+                    message: "Invalid OTP"
+                });
+            }
+            console.log(new Date(result.rows[0].createdat));
+            console.log(Date.now());
+            var createdAt = new Date(result.rows[0].createdat);
+            var diff = Date.now() - createdAt.getTime();
+            console.log(diff);
+            var minutes = Math.round((diff / 1000) / 60);
+            console.log(minutes);
+            //check the created time greaterthan 1 min if true delete the column from db
+            if (minutes > 1) {
+                db.query(queries.deleteOTP, [email, otp]);
+            }
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            isSuccess: false,
+            message: "Error verifying OTP"
+        })
+    }
+}
+
+export default { addUser, checkUser, addProduct, getProducts, generateOTP, verifyOTP }

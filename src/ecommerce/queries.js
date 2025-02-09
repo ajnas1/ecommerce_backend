@@ -5,6 +5,8 @@ const updateLastLogin = "UPDATE users SET last_login = now() Where id = $1";
 const addProduct = "INSERT INTO products (name, image, price, isStockOut) VALUES ($1, $2, $3, $4)";
 const getProducts = "SELECT * FROM products";
 const addOTP = "INSERT INTO otp (email, otp, createdat) VAlUES($1, $2, NOW())";
-// const checkEmailExists = "SELECT * FROM  users WHERE email = $1";
+const checkEmailExists = "SELECT * FROM  users WHERE email = $1";
+const checkOTPExists = "SELECT * FROM otp WHERE email = $1 AND otp = $2";
+const deleteOTP = "DELETE FROM otp WHERE LOWER(email) = LOWER($1) AND otp = $2";
 
-export default { getUser, addUser, checkUser, updateLastLogin, addProduct, getProducts,  addOTP}
+export default { getUser, addUser, checkUser, updateLastLogin, addProduct, getProducts,  addOTP, checkEmailExists, checkOTPExists, deleteOTP}
