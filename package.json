@@ -18,6 +18,8 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.0",
     "otp-generator": "^4.0.1",
-    "pg": "^8.13.1"
+    "paypal-rest-sdk": "^1.8.1",
+    "pg": "^8.13.1",
+    "razorpay": "^2.9.5"
   }
 }

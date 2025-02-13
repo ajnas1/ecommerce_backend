@@ -19,6 +19,14 @@ router.get('/get-products', controller.getProducts);
 
 router.post('/generate-otp', controller.generateOTP);
 
-router.post('/verify-otp', controller.verifyOTP)
+router.post('/verify-otp', controller.verifyOTP);
+
+router.post('/pay', controller.pay);
+
+router.get('/success', controller.success);
+
+router.get('/cancel',controller.cancel);
+
+router.post('/change-password',userMiddleware.validateNewPassword, controller.changePassword);
 
 export default router;

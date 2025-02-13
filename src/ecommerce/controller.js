@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import otpGenerator from "otp-generator";
 import nodemailer from "nodemailer";
+import paypal from "paypal-rest-sdk";
+
 
 const addUser = (req, res) => {
     const { username, password, email } = req.body;
@@ -60,8 +62,8 @@ const checkUser = (req, res) => {
 }
 
 const addProduct = (req, res) => {
-    const { name, image, price, isStockOut } = req.body;
-    db.query(queries.addProduct, [name, image, price, isStockOut], (error, result) => {
+    const { name, image, price, isStockOut, category } = req.body;
+    db.query(queries.addProduct, [name, image, price, isStockOut, category], (error, result) => {
         console.log('asdnkdsaj');
         if (error) {
             res.status(400).send({ message: "productadding unsuccessfull" });
@@ -105,13 +107,13 @@ const generateOTP = async (req, res) => {
                 });
                 res.status(201).json({
                     isSuccess: true,
-                    messsage: "successfull",
+                    message: "successfull",
                 });
             } catch (error) {
                 console.log(error);
                 res.status(500).json({
                     isSuccess: false,
-                    messsage: "Error sending OTP",
+                    message: "Error sending OTP",
                 });
             }
 
@@ -119,7 +121,7 @@ const generateOTP = async (req, res) => {
             console.log('Email not exists.');
             res.status(400).json({
                 isSuccess: false,
-                messsage: "Email not exists.",
+                message: "Email not exists.",
             });
         }
     });
@@ -127,7 +129,6 @@ const generateOTP = async (req, res) => {
 
 const verifyOTP = (req, res) => {
     const { email, otp } = req.body;
-
     try {
         db.query(queries.checkOTPExists, [email, otp], (error, result) => {
             if (result.rows.length) {
@@ -162,4 +163,121 @@ const verifyOTP = (req, res) => {
     }
 }
 
-export default { addUser, checkUser, addProduct, getProducts, generateOTP, verifyOTP }
+paypal.configure({
+    'mode': 'sandbox',  // live
+    'client_id': 'ATmZwkLJcY0sU8EwPrns_nKNo8lmRzimJNM3cYbQg84TDcfLU_94M_ZR6LXKvkyciC5J9YZuUxAvkmLe',
+    'client_secret': 'ELhmp8TNCpawR-_9FFZxe5l5HolQenGyqPF3OwjljoJg2N1rr5LLo97sksV-VlbyX79ZLhJr7cMGjX4v'
+});
+const pay = (req, res) => {
+    const {name, price} = req.body;
+    const create_payment_json = {
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        "redirect_urls": {
+            "return_url": "http://localhost:3000/success",
+            "cancel_url": "http://localhost:3000/cancel"
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": name,
+                    "price": price,  
+                    "currency": "INR",
+                    "quantity": 1
+                }]
+            },
+            "amount": {
+                "currency": "INR",
+                "total": price
+            },
+            "description": "Hat for the best team ever"
+        }]
+    };
+
+    paypal.payment.create(create_payment_json, (error, payment) => {
+        if (error) {
+            console.error(error);
+            throw error;
+        } else {
+            for (let i = 0; i < payment.links.length; i++) {
+                if (payment.links[i].rel === 'approval_url') {
+                    console.log('approved');
+                    return res.send(`${payment.links[i].href}   ${payment.id}`);
+                }
+            }
+            return res.status(500).send({ message: "No approval URL found" });
+        }
+    });
+};
+const success = (req, res) => {
+    const payerId = req.query.payerId;
+    const paymentId = req.query.paymentId;
+
+    const execute_paymnet_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "USD",
+                "total": {
+                    "currency": "USD",
+                    "total": "25.00"
+                }
+            }
+        }]
+    }
+
+    paypal.payment.execute(paymentId,
+        execute_paymnet_json,
+        (error, payment) => {
+            if (error) {
+                console.log(error.response);
+                throw error;
+            } else {
+                console.log(JSON.stringify(payment));
+                res.send('Success');
+            }
+        }
+    )
+}
+
+
+const cancel = (req, res) => res.send('Cancelled');
+
+
+const changePassword = async (req, res) => {
+    const { password, email } = req.body;
+   console.log(email);
+    try {
+       await bcrypt.hash(password, 10, (err, hash) => {
+            if (err) {
+                return res.status(500).send({ message: err })
+            } else {
+                db.query(queries.updatePassword, [hash, email], (error, result) => {
+                    console.log(result.rows);
+                    if (result.rows.length) {
+                        res.status(400).json({
+                            isSuccess: false,
+                            message: "unsuccessfull"
+                        });
+                    } else {
+                        res.status(201).json({
+                            isSuccess: true,
+                            message: "success"
+                        })
+                    }
+                });
+            }
+        });
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            isSuccess: false,
+            message: "unsuccess"
+        })
+    }
+}
+
+export default { addUser, checkUser, addProduct, getProducts, generateOTP, verifyOTP, pay, success, cancel, changePassword }
